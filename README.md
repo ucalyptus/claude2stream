@@ -1,15 +1,29 @@
 # claude2stream
 
-Real-time web viewer for Claude Code conversations. Streams conversation data from `~/.claude` as durable streams and provides a web UI for browsing sessions.
+Your Claude history exposed as a [Durable Stream](https://github.com/durable-streams/durable-streams/).
+
+A streaming web UI is served  on /ui that allows you to view sessions as they happen.
+
+<img alt="Screenshot" src=".github/screen.png" />
+
+## Installation
+
+Download the latest binary for your platform from [GitHub Releases](https://github.com/broady/claude2stream/releases).
+
+### From Source
+
+Requires Go 1.21+ and pnpm.
+
+```bash
+cd webui/ && pnpm install && pnpm build && cd - && go build
+
+# Or with Taskfile installed:
+task build
+```
 
 ## Quick Start
 
 ```bash
-# Build and run
-task run
-
-# Or just build
-task build
 ./claude2stream
 ```
 
@@ -39,8 +53,6 @@ task dev
 The Vite dev server runs on port 3000 and proxies API requests to the Go backend on port 8214.
 
 ## Building
-
-Requires Go 1.21+ and pnpm.
 
 ```bash
 task build          # Build frontend + binary
