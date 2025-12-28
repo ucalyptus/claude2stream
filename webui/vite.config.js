@@ -5,7 +5,7 @@ import devtools from 'solid-devtools/vite';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [devtools(), solid()],
-  base: '/ui/',
+  base: './',
   server: {
     proxy: {
       // Proxy API requests to Go backend during dev

@@ -13,13 +13,14 @@ import (
 	"github.com/ahimsalabs/durable-streams-go/durablestream"
 )
 
-//go:embed webui/dist/*
+//go:embed webui/dist
 var webUI embed.FS
 
 func main() {
 	addr := flag.String("addr", ":8214", "listen address")
 	claudeDir := flag.String("dir", "", "claude directory (default: ~/.claude)")
 	dev := flag.Bool("dev", false, "enable CORS for development")
+	basePath := flag.String("base", "", "base path for serving (e.g., /proxy/8214)")
 	flag.Parse()
 
 	dir := *claudeDir
@@ -42,17 +43,42 @@ func main() {
 	// Build the main handler
 	mux := http.NewServeMux()
 
-	// Serve embedded UI at /ui/
+	// Normalize base path
+	base := strings.TrimSpace(*basePath)
+	if base != "" {
+		// Ensure base starts with / and ends with /
+		if !strings.HasPrefix(base, "/") {
+			base = "/" + base
+		}
+		if !strings.HasSuffix(base, "/") {
+			base += "/"
+		}
+	}
+
+	// Serve embedded UI
 	uiFS, err := fs.Sub(webUI, "webui/dist")
 	if err != nil {
 		log.Fatalf("embed ui: %v", err)
 	}
-	mux.Handle("/ui/", http.StripPrefix("/ui/", spaHandler(http.FileServer(http.FS(uiFS)))))
+	
+	var uiPattern string
+	if base == "" {
+		uiPattern = "/ui/"
+	} else {
+		uiPattern = base + "ui/"
+	}
+	
+	mux.Handle(uiPattern, http.StripPrefix(uiPattern, spaHandler(http.FileServer(http.FS(uiFS)))))
 
-	// Redirect root to UI
+	// Catch-all handler for root and streams
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Redirect root to UI
 		if r.URL.Path == "/" {
-			http.Redirect(w, r, "/ui/", http.StatusFound)
+			redirect := "/ui/"
+			if base != "" {
+				redirect = base + "ui/"
+			}
+			http.Redirect(w, r, redirect, http.StatusFound)
 			return
 		}
 		// All other paths go to stream handler
@@ -67,7 +93,11 @@ func main() {
 
 	log.Printf("Claude streams server listening on %s", *addr)
 	log.Printf("Watching: %s", dir)
-	log.Printf("UI: http://localhost%s/ui/", *addr)
+	if *basePath != "" {
+		log.Printf("UI: http://localhost%s%s/ui/", *addr, *basePath)
+	} else {
+		log.Printf("UI: http://localhost%s/ui/", *addr)
+	}
 
 	if err := http.ListenAndServe(*addr, handler); err != nil {
 		log.Fatalf("server: %v", err)
