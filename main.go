@@ -81,6 +81,11 @@ func main() {
 			http.Redirect(w, r, redirect, http.StatusFound)
 			return
 		}
+		// Also redirect base path root to UI (e.g., /proxy/8214/ -> /proxy/8214/ui/)
+		if base != "" && (r.URL.Path == base || r.URL.Path == strings.TrimSuffix(base, "/")) {
+			http.Redirect(w, r, base+"ui/", http.StatusFound)
+			return
+		}
 		// All other paths go to stream handler
 		streamHandler.ServeHTTP(w, r)
 	})
@@ -93,13 +98,8 @@ func main() {
 
 	log.Printf("Claude streams server listening on %s", *addr)
 	log.Printf("Watching: %s", dir)
-	if *basePath != "" {
-		// Normalize display path to ensure it starts with /
-		displayPath := *basePath
-		if !strings.HasPrefix(displayPath, "/") {
-			displayPath = "/" + displayPath
-		}
-		log.Printf("UI: http://localhost%s%s/ui/", *addr, displayPath)
+	if base != "" {
+		log.Printf("UI: http://localhost%s%sui/", *addr, base)
 	} else {
 		log.Printf("UI: http://localhost%s/ui/", *addr)
 	}
