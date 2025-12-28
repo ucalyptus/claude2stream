@@ -60,14 +60,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("embed ui: %v", err)
 	}
-	
+
 	var uiPattern string
 	if base == "" {
 		uiPattern = "/ui/"
 	} else {
 		uiPattern = base + "ui/"
 	}
-	
+
 	mux.Handle(uiPattern, http.StripPrefix(uiPattern, spaHandler(http.FileServer(http.FS(uiFS)))))
 
 	// Catch-all handler for root and streams
