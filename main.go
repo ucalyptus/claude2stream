@@ -94,7 +94,12 @@ func main() {
 	log.Printf("Claude streams server listening on %s", *addr)
 	log.Printf("Watching: %s", dir)
 	if *basePath != "" {
-		log.Printf("UI: http://localhost%s%s/ui/", *addr, *basePath)
+		// Normalize display path to ensure it starts with /
+		displayPath := *basePath
+		if !strings.HasPrefix(displayPath, "/") {
+			displayPath = "/" + displayPath
+		}
+		log.Printf("UI: http://localhost%s%s/ui/", *addr, displayPath)
 	} else {
 		log.Printf("UI: http://localhost%s/ui/", *addr)
 	}
